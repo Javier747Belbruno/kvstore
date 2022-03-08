@@ -8,19 +8,18 @@ fn main() {
     let key = arguments.next().unwrap();
     let value = arguments.next().unwrap();
     println!("The key is '{}' and the value is'{}'", key, value);
-    let contents = format!("{}\t{}", key, value);
-    // Write to file
-    let write_result = std::fs::write("kv.db", contents);
-    //  Result<(), std::io::Error>
-    match write_result {
-        Ok(_) => println!("Successfully wrote to the file"),
-        Err(e) => println!("There was an error writing to the file: {:?}", e),
+    let mut database = Database::new().expect("Database::new failed");
+    database.insert(key.to_uppercase(), value.clone());
+    database.insert(key, value);
+    match database.flush() {
+        Ok(_) => println!("Flushed"),
+        Err(e) => println!("Error: {}", e),
     }
-    let database = Database::new().expect("Database::new failed");
 }
 
 struct Database {
     map: std::collections::HashMap<String, String>,
+    flush: bool,
 }
 //Here we are implementing the methods
 impl Database {
@@ -33,6 +32,36 @@ impl Database {
             let value = parts.next().unwrap();
             map.insert(key.to_owned(), value.to_owned());
         }
-        Ok(Database { map: map })
+        Ok(Database {
+            map: map,
+            flush: false,
+        })
     }
+    fn insert(&mut self, key: String, value: String) {
+        self.map.insert(key, value);
+    }
+
+    fn flush(mut self) -> std::io::Result<()> {
+        self.flush = true;
+        do_flush(&self)
+    }
+}
+
+impl Drop for Database {
+    fn drop(&mut self) {
+        if !self.flush {
+            println!("Dropping");
+            let _ = do_flush(self);
+        }
+    }
+}
+
+fn do_flush(database: &Database) -> std::io::Result<()> {
+    println!("Do flush called");
+    let mut contents = String::new();
+    for (key, value) in &database.map {
+        let kvpair = format!("{}\t{}\n", key, value);
+        contents.push_str(&kvpair);
+    }
+    std::fs::write("kv.db", contents)
 }
