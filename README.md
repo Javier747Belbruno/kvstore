@@ -1,0 +1,13 @@
+- cargo new kvstore
+- cd kvstore
+- tree
+- cargo check
+- cargo build
+- cargo run
+- ls target/debug
+- cat README.md
+- cargo build --release
+- cargo run --release
+- code .
+- cargo run -- hello world
+- xxd kv.db
