@@ -2,8 +2,6 @@
 
 ## KVStore: Program that stores in a plain file "kv.db" key and values passed as arguments when it is executed.
 
-
-
 ### Commands employed
 
 - cargo new kvstore
